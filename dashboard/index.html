@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EarnTheFeed Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="top-strip">
+      <div class="top-left">
+        <span class="dot"></span>
+        <span>Live Demo Mode</span>
+      </div>
+      <div class="top-right">
+        <span id="lastUpdated">Last updated: just now</span>
+      </div>
+    </section>
+
+    <section class="hero">
+      <div class="hero-text">
+        <p class="eyebrow">EarnTheFeed</p>
+        <h1>Wellbeing Dashboard</h1>
+        <p class="subtitle">
+          Tracking reclaimed time, focus recovery, and coding effort from the prototype session.
+        </p>
+      </div>
+
+      <div class="hero-badge">
+        <span class="badge-label">Current Status</span>
+        <span class="badge-value">Feed Access Controlled</span>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card" id="hoursCard">
+        <div class="stat-top">
+          <span class="stat-label">Hours Reclaimed</span>
+          <span class="stat-tag">Today</span>
+        </div>
+        <h2 id="hours">12.4</h2>
+        <p class="stat-foot">Estimated time redirected from scrolling</p>
+      </article>
+
+      <article class="stat-card" id="focusCard">
+        <div class="stat-top">
+          <span class="stat-label">Focus Score</span>
+          <span class="stat-tag">Active</span>
+        </div>
+        <h2 id="focus">85%</h2>
+        <p class="stat-foot">Session quality based on successful unlock attempts</p>
+      </article>
+
+      <article class="stat-card" id="puzzlesCard">
+        <div class="stat-top">
+          <span class="stat-label">Technical Tasks Completed</span>
+          <span class="stat-tag">7 Days</span>
+        </div>
+        <h2 id="puzzles">18</h2>
+        <p class="stat-foot">Completed technical challenges before access</p>
+      </article>
+
+      <article class="stat-card" id="unlocksCard">
+        <div class="stat-top">
+          <span class="stat-label">Earned Sessions</span>
+          <span class="stat-tag">Granted</span>
+        </div>
+        <h2 id="unlocks">6</h2>
+        <p class="stat-foot">Successful short feed sessions earned by users</p>
+      </article>
+    </section>
+
+    <section class="main-grid">
+      <article class="panel chart-panel">
+        <div class="panel-head">
+          <div>
+            <p class="panel-kicker">Weekly Activity</p>
+            <h3>Code Puzzles Solved</h3>
+          </div>
+          <span class="panel-note">Last 7 days</span>
+        </div>
+        <canvas id="puzzleChart"></canvas>
+      </article>
+
+      <aside class="side-panels">
+        <article class="panel info-panel">
+          <p class="panel-kicker">Today</p>
+          <h3>Session Summary</h3>
+          <p class="info-text">
+            The user completed 5 technical tasks instead of entering a passive scroll loop.
+            Short-term effort replaced low-value screen time.
+          </p>
+        </article>
+
+        <article class="panel info-panel">
+          <p class="panel-kicker">Activity</p>
+          <h3>Recent Event</h3>
+          <p class="info-text" id="eventLog">
+            No recent activity yet. Press Simulate Update to generate a new session event.
+          </p>
+        </article>
+      </aside>
+    </section>
+
+    <section class="action-row">
+      <button id="updateBtn">Simulate Update</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
