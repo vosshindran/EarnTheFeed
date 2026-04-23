@@ -94,10 +94,10 @@ document.getElementById("updateBtn").addEventListener("click", () => {
   let puzzles = parseInt(document.getElementById("puzzles").textContent);
   let unlocks = parseInt(document.getElementById("unlocks").textContent);
 
-  const hourIncrease = Number((Math.random() * 0.9 + 0.1).toFixed(1));
-  const focusChange = Math.floor(Math.random() * 3) - 1; // -1, 0, or 1
-  const puzzleIncrease = Math.floor(Math.random() * 3); // 0 to 2
-  const unlockIncrease = Math.floor(Math.random() * 2); // 0 or 1
+const hourIncrease = Number((Math.random() * 0.9 + 0.1).toFixed(1));
+const focusChange = Math.floor(Math.random() * 2); // 0 or 1
+const puzzleIncrease = Math.floor(Math.random() * 2) + 1; // 1 or 2
+const unlockIncrease = Math.floor(Math.random() * 2); // 0 or 1
 
   hours += hourIncrease;
   focus = Math.min(Math.max(focus + focusChange, 0), 100);
