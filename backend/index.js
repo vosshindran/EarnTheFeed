@@ -1,43 +1,75 @@
-import express from "express";
-import cors from "cors";
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-let currentAnswer = "";
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+// ✅ NORMALIZE FUNCTION (The "Fuzzy" Logic)
+const normalize = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/\s+/g, '') // Remove all whitespace
+    .replace(/['"‘“’”]/g, "'") // Normalize quotes
+    .replace(/;/g, '') // Remove all semicolons
+    .toLowerCase()
+    .trim();
+};
 
 // ✅ GET PUZZLE
-app.get("/get-puzzle", (req, res) => {
-  const puzzle = {
-    question: "Fix the missing console log syntax.",
-    code: "console.log('Hello'",
-    answer: "console.log('Hello')"
-  };
+app.get('/get-puzzle', async (req, res) => {
+  try {
+    const prompt = `Generate a short JS syntax puzzle. 
+    Return ONLY a JSON object: {"question": "...", "code": "...", "answer": "..."}. 
+    No markdown, no newlines.`;
 
-  currentAnswer = puzzle.answer;
-  res.json(puzzle);
-});
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text();
 
-// ✅ VERIFY (FIXED)
-app.post("/verify", (req, res) => {
+    const cleanText = text
+      .replace(/```json|```/g, '')
+      .replace(/\n|\r/g, '')
+      .trim();
+    const puzzle = JSON.parse(cleanText);
 
-  const normalize = (str) =>
-    str.replace(/\s/g, "").replace(/;$/, "");
-
-  const userAnswer = normalize(req.body.answer)
-  const correctAnswer = normalize(currentAnswer);
-
-  if (userAnswer === correctAnswer) {
-    res.json({ correct: true });
-  } else {
-    console.log("Expected:", correctAnswer);
-    console.log("Got:", userAnswer);
-    res.status(400).json({ correct: false });
+    res.json(puzzle);
+  } catch (error) {
+    console.error('Gemini Error:', error);
+    res.json({
+      question: 'Fix the missing console log syntax.',
+      code: "console.log('Hello' ",
+      answer: "console.log('Hello')",
+    });
   }
 });
 
-// ✅ START SERVER
+// ✅ VERIFY
+app.post('/verify', (req, res) => {
+  // Pulling 'answer' and 'expected' from the body (Matches Sanchay's code)
+  const { answer, expected } = req.body;
+
+  const userAnswer = normalize(answer);
+  const correctAnswer = normalize(expected);
+
+  console.log('--- Verification Debug ---');
+  console.log('User:', `[${userAnswer}]`);
+  console.log('Correct:', `[${correctAnswer}]`);
+
+  if (userAnswer === correctAnswer) {
+    res.json({ success: true }); // Matches verifyData.success in extension
+  } else {
+    res.json({ success: false });
+  }
+});
+
 app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+  console.log('Chef is cooking at http://localhost:3000');
 });
