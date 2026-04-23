@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-// 1. Import the Google Generative AI library
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
@@ -10,32 +9,40 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 2. Initialize Gemini with your API Key from .env
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-app.get('/', (req, res) => {
-  res.send('EarnTheFeed backend is running 🚀');
-});
+// ✅ NORMALIZE FUNCTION (The "Fuzzy" Logic)
+const normalize = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/\s+/g, '') // Remove all whitespace
+    .replace(/['"‘“’”]/g, "'") // Normalize quotes
+    .replace(/;/g, '') // Remove all semicolons
+    .toLowerCase()
+    .trim();
+};
 
-// 3. The "Brain" Route: Generates a puzzle for the extension
+// ✅ GET PUZZLE
 app.get('/get-puzzle', async (req, res) => {
   try {
-    const prompt = `Generate a very short JavaScript syntax puzzle for a beginner. 
-    Return ONLY a raw JSON object with these keys: 
-    "question" (string), "code" (string with a mistake), "answer" (the corrected string). 
-    Do not use markdown blocks like \`\`\`json. Just the raw text.`;
+    const prompt = `Generate a short JS syntax puzzle. 
+    Return ONLY a JSON object: {"question": "...", "code": "...", "answer": "..."}. 
+    No markdown, no newlines.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    let text = response.text();
 
-    // Convert the AI's text response into an actual JSON object
-    const puzzle = JSON.parse(text);
+    const cleanText = text
+      .replace(/```json|```/g, '')
+      .replace(/\n|\r/g, '')
+      .trim();
+    const puzzle = JSON.parse(cleanText);
+
     res.json(puzzle);
   } catch (error) {
     console.error('Gemini Error:', error);
-    // 4. Fallback: If the API is down/slow, the demo still works!
     res.json({
       question: 'Fix the missing console log syntax.',
       code: "console.log('Hello' ",
@@ -44,8 +51,25 @@ app.get('/get-puzzle', async (req, res) => {
   }
 });
 
-const PORT = 3000;
+// ✅ VERIFY
+app.post('/verify', (req, res) => {
+  // Pulling 'answer' and 'expected' from the body (Matches Sanchay's code)
+  const { answer, expected } = req.body;
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  const userAnswer = normalize(answer);
+  const correctAnswer = normalize(expected);
+
+  console.log('--- Verification Debug ---');
+  console.log('User:', `[${userAnswer}]`);
+  console.log('Correct:', `[${correctAnswer}]`);
+
+  if (userAnswer === correctAnswer) {
+    res.json({ success: true }); // Matches verifyData.success in extension
+  } else {
+    res.json({ success: false });
+  }
+});
+
+app.listen(3000, () => {
+  console.log('Chef is cooking at http://localhost:3000');
 });
