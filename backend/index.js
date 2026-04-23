@@ -21,8 +21,12 @@ app.get("/get-puzzle", (req, res) => {
 
 // ✅ VERIFY (FIXED)
 app.post("/verify", (req, res) => {
-  const userAnswer = req.body.answer.replace(/\s/g, "");
-  const correctAnswer = currentAnswer.replace(/\s/g, "");
+
+  const normalize = (str) =>
+    str.replace(/\s/g, "").replace(/;$/, "");
+
+  const userAnswer = normalize(req.body.answer)
+  const correctAnswer = normalize(currentAnswer);
 
   if (userAnswer === correctAnswer) {
     res.json({ correct: true });
