@@ -1,39 +1,92 @@
 import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
 let currentAnswer = "";
 
-// ✅ GET PUZZLE
-app.get("/get-puzzle", (req, res) => {
-  const puzzle = {
-    question: "Fix the missing console log syntax.",
-    code: "console.log('Hello'",
-    answer: "console.log('Hello')"
-  };
-
-  currentAnswer = puzzle.answer;
-  res.json(puzzle);
+// ✅ ROOT ROUTE
+app.get("/", (req, res) => {
+    res.send("Earn The Feed Backend is running! 🚀");
 });
 
-// ✅ VERIFY (FIXED)
-app.post("/verify", (req, res) => {
-  const userAnswer = req.body.answer.replace(/\s/g, "");
-  const correctAnswer = currentAnswer.replace(/\s/g, "");
+app.get("/ping", (req, res) => {
+    res.json({ status: "alive", timestamp: Date.now() });
+});
 
-  if (userAnswer === correctAnswer) {
-    res.json({ correct: true });
-  } else {
-    console.log("Expected:", correctAnswer);
-    console.log("Got:", userAnswer);
-    res.status(400).json({ correct: false });
-  }
+// ✅ GET CHALLENGE (POWERED BY GEMINI)
+app.get("/get-challenge", async (req, res) => {
+    const type = req.query.type || "coding";
+    
+    let prompt = "";
+    if (type === "coding") {
+        prompt = "Generate a short JavaScript debugging challenge. The answer should be the corrected line or result. Return JSON: { \"question\": \"description\", \"code\": \"buggy code\", \"answer\": \"correct code\" }";
+    } else if (type === "puzzle") {
+        prompt = "Generate a Tic-Tac-Toe winning move puzzle. Provide a 3x3 grid state where it is X's turn and there is exactly one winning move. Return JSON: { \"question\": \"Find the winning move for X (0-8 index).\", \"code\": \"[Board as ASCII grid]\", \"answer\": \"the index number\" }";
+    } else if (type === "workout") {
+        const exercises = ["Pushups", "Jumping Jacks"];
+        const ex = exercises[Math.floor(Math.random() * exercises.length)];
+        const reps = Math.floor(Math.random() * 6) + 10; // 10-15
+        res.json({
+            question: `Drop and give me ${reps} ${ex}!`,
+            code: "",
+            answer: "DONE"
+        });
+        currentAnswer = "DONE";
+        return;
+    }
+
+    try {
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+        
+        // Clean the response (sometimes Gemini wraps JSON in markdown blocks)
+        const jsonStr = text.replace(/```json|```/g, "").trim();
+        const challenge = JSON.parse(jsonStr);
+
+        currentAnswer = challenge.answer;
+        res.json(challenge);
+    } catch (err) {
+        console.error("Gemini Error:", err);
+        // Fallback challenge
+        const fallback = {
+            question: "Fix the missing parenthesis.",
+            code: "console.log('Hello'",
+            answer: "console.log('Hello')"
+        };
+        currentAnswer = fallback.answer;
+        res.json(fallback);
+    }
+});
+
+// ✅ VERIFY
+app.post("/verify", (req, res) => {
+    const userAnswer = (req.body.answer || "").trim().toLowerCase();
+    const correctAnswer = currentAnswer.trim().toLowerCase();
+
+    // Remove all spaces for more flexible checking
+    const cleanUser = userAnswer.replace(/\s/g, "");
+    const cleanCorrect = correctAnswer.replace(/\s/g, "");
+
+    if (cleanUser === cleanCorrect) {
+        res.json({ correct: true });
+    } else {
+        res.status(400).json({ correct: false });
+    }
 });
 
 // ✅ START SERVER
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, "127.0.0.1", () => {
+    console.log(`Server running on http://127.0.0.1:${PORT}`);
 });
