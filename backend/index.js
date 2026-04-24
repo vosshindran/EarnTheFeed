@@ -10,140 +10,85 @@ app.use(cors());
 app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-// 🧠 MEMORY (avoid repeats)
-let lastQuestion = "";
+let currentAnswer = '';
 
-// ✅ NORMALIZE (your logic kept)
-const normalize = (str) => {
-  if (!str) return '';
-  return str
-    .replace(/\s+/g, '')
-    .replace(/['"‘“’”]/g, "'")
-    .replace(/;/g, '')
-    .toLowerCase()
-    .trim();
-};
+// ✅ ROOT ROUTE
+app.get('/', (req, res) => {
+  res.send('Earn The Feed Backend is running! 🚀');
+});
 
-// 🎯 FALLBACK POOL (dynamic)
-const fallbackPuzzles = [
-  {
-    question: "Fix the missing console log syntax.",
-    code: "console.log('Hello'",
-    answer: "console.log('Hello')",
-    difficulty: "Easy"
-  },
-  {
-    question: "Fix variable declaration.",
-    code: "let x = 5 console.log(x)",
-    answer: "let x = 5; console.log(x)",
-    difficulty: "Easy"
-  },
-  {
-    question: "Fix loop syntax.",
-    code: "for(i=0 i<5 i++)",
-    answer: "for(i=0; i<5; i++)",
-    difficulty: "Medium"
-  },
-  {
-    question: "Fix function syntax.",
-    code: "function greet { return 'Hi'; }",
-    answer: "function greet() { return 'Hi'; }",
-    difficulty: "Medium"
-  },
-  {
-    question: "Fix async function syntax.",
-    code: "async function fetchData { return await fetch(url); }",
-    answer: "async function fetchData() { return await fetch(url); }",
-    difficulty: "Hard"
+app.get('/ping', (req, res) => {
+  res.json({ status: 'alive', timestamp: Date.now() });
+});
+
+// ✅ GET CHALLENGE (POWERED BY GEMINI)
+app.get('/get-challenge', async (req, res) => {
+  const type = req.query.type || 'coding';
+
+  let prompt = '';
+  if (type === 'coding') {
+    prompt =
+      'Generate a short JavaScript debugging challenge. The answer should be the corrected line or result. Return JSON: { "question": "description", "code": "buggy code", "answer": "correct code" }';
+  } else if (type === 'puzzle') {
+    prompt =
+      'Generate a Tic-Tac-Toe winning move puzzle. Provide a 3x3 grid state where it is X\'s turn and there is exactly one winning move. Return JSON: { "question": "Find the winning move for X (0-8 index).", "code": "[Board as ASCII grid]", "answer": "the index number" }';
+  } else if (type === 'workout') {
+    const exercises = ['Pushups', 'Jumping Jacks'];
+    const ex = exercises[Math.floor(Math.random() * exercises.length)];
+    const reps = Math.floor(Math.random() * 6) + 10; // 10-15
+    res.json({
+      question: `Drop and give me ${reps} ${ex}!`,
+      code: '',
+      answer: 'DONE',
+    });
+    currentAnswer = 'DONE';
+    return;
   }
-];
 
-// 🎯 HELPER → get non-repeating fallback
-const getFallback = () => {
-  let puzzle;
-  do {
-    puzzle = fallbackPuzzles[Math.floor(Math.random() * fallbackPuzzles.length)];
-  } while (puzzle.question === lastQuestion);
-
-  lastQuestion = puzzle.question;
-  return puzzle;
-};
-
-// 🚀 GET PUZZLE
-app.get('/get-puzzle', async (req, res) => {
   try {
-    const prompt = `
-Generate a UNIQUE JavaScript syntax debugging puzzle.
-
-Rules:
-- Must NOT be a simple console.log example
-- Use different concepts (loops, functions, async, variables)
-- Keep it short and solvable
-- Avoid repeating common examples
-
-Return ONLY JSON:
-{"question":"...","code":"...","answer":"...","difficulty":"Easy/Medium/Hard"}
-`;
-
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    let text = response.text();
+    const text = response.text();
 
-    const cleanText = text
-      .replace(/```json|```/g, '')
-      .replace(/\n|\r/g, '')
-      .trim();
+    // Clean the response (sometimes Gemini wraps JSON in markdown blocks)
+    const jsonStr = text.replace(/```json|```/g, '').trim();
+    const challenge = JSON.parse(jsonStr);
 
-    const puzzle = JSON.parse(cleanText);
-
-    // 🧠 Avoid repeat
-    if (puzzle.question === lastQuestion) {
-      throw new Error("Duplicate question");
-    }
-
-    lastQuestion = puzzle.question;
-
-    res.json({
-      question: puzzle.question,
-      code: puzzle.code,
-      difficulty: puzzle.difficulty || "Medium",
-      expected: puzzle.answer // 👈 IMPORTANT for your extension
-    });
-
-  } catch (error) {
-    console.error('Gemini Error → Using fallback:', error.message);
-
-    const fallback = getFallback();
-
-    res.json({
-      question: fallback.question,
-      code: fallback.code,
-      difficulty: fallback.difficulty,
-      expected: fallback.answer // 👈 IMPORTANT
-    });
+    currentAnswer = challenge.answer;
+    res.json(challenge);
+  } catch (err) {
+    console.error('Gemini Error:', err);
+    // Fallback challenge
+    const fallback = {
+      question: 'Fix the missing parenthesis.',
+      code: "console.log('Hello'",
+      answer: "console.log('Hello')",
+    };
+    currentAnswer = fallback.answer;
+    res.json(fallback);
   }
 });
 
-// ✅ VERIFY (your version, unchanged logic)
+// ✅ VERIFY
 app.post('/verify', (req, res) => {
-  const { answer, expected } = req.body;
+  const userAnswer = (req.body.answer || '').trim().toLowerCase();
+  const correctAnswer = currentAnswer.trim().toLowerCase();
 
-  const userAnswer = normalize(answer);
-  const correctAnswer = normalize(expected);
+  // Remove all spaces for more flexible checking
+  const cleanUser = userAnswer.replace(/\s/g, '');
+  const cleanCorrect = correctAnswer.replace(/\s/g, '');
 
-  console.log('--- Verification Debug ---');
-  console.log('User:', `[${userAnswer}]`);
-  console.log('Correct:', `[${correctAnswer}]`);
-
-  if (userAnswer === correctAnswer) {
-    res.json({ success: true });
+  if (cleanUser === cleanCorrect) {
+    res.json({ correct: true });
   } else {
-    res.json({ success: false });
+    res.status(400).json({ correct: false });
   }
 });
 
-app.listen(3000, () => {
-  console.log('🔥 Chef is cooking at http://localhost:3000');
+// ✅ START SERVER
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '127.0.0.1', () => {
+  console.log(`Server running on http://127.0.0.1:${PORT}`);
 });

@@ -1,0 +1,12 @@
+{
+  "name": "earnthefeed",
+  "version": "1.0.0",
+  "description": "Earn The Feed - A Chrome extension that locks your feed until you solve a coding puzzle.",
+  "scripts": {
+    "dev": "npm run start --prefix backend",
+    "start": "npm run start --prefix backend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
