@@ -11,6 +11,12 @@
     "http://localhost:3000/*",
     "http://127.0.0.1:3000/*"
   ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dashboard/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [

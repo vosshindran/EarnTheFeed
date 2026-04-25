@@ -94,29 +94,41 @@
 
     const style = document.createElement('style');
     style.textContent = `
-            @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
 
-            :root { --primary: #00f2ff; --secondary: #7000ff; --accent: #ff00c8; --bg: #000; --card-bg: #111; --font: 'DM Sans', sans-serif; }
+            :root { 
+                --primary: #67e8f9; --secondary: #7c3aed; --accent: #22c55e; 
+                --bg: #050505; --panel: rgba(20, 24, 36, 0.82); --line: rgba(255,255,255,0.08);
+                --text: #f4f4f5; --muted: #9ca3af; --muted-2: #c4c7cf;
+                --shadow: 0 18px 50px rgba(0,0,0,0.45); --font: 'DM Sans', sans-serif; 
+            }
             body > *:not(#etf-overlay) { display: none !important; }
             html, body { background: var(--bg) !important; margin: 0 !important; overflow: hidden !important; width: 100vw; height: 100vh; }
 
             #etf-overlay {
                 position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: var(--bg); display: flex; flex-direction: column;
-                z-index: 2147483647; font-family: var(--font); color: white;
+                background: 
+                    radial-gradient(circle at top left, rgba(103, 232, 249, 0.08), transparent 28%),
+                    radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 28%),
+                    linear-gradient(180deg, #07090f 0%, #0b1020 100%);
+                display: flex; flex-direction: column;
+                z-index: 2147483647; font-family: var(--font); color: var(--text);
                 overflow-y: auto; overflow-x: hidden;
             }
 
-            .etf-header { height: 70px; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-            .etf-logo { font-size: 1rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+            .etf-header { 
+                height: 70px; padding: 0 40px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; 
+                border-bottom: 1px solid var(--line);
+            }
+            .etf-logo { font-size: 0.84rem; font-weight: 900; color: var(--primary); letter-spacing: 2px; }
 
             .etf-main { flex: 1; width: 100%; display: flex; justify-content: center; padding: 40px 0 120px 0; }
             
             .etf-dashboard-card {
-                background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-                backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-                border-radius: 32px; padding: 3rem; width: 850px; max-width: 95%; 
-                box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+                background: var(--panel); border: 1px solid var(--line);
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border-radius: 24px; padding: 3rem; width: 850px; max-width: 95%; 
+                box-shadow: var(--shadow);
                 height: fit-content; margin: auto; display: flex; gap: 40px;
                 animation: cardIn 0.5s ease-out;
             }
@@ -126,41 +138,42 @@
             .etf-col-right { flex: 1; display: flex; flex-direction: column; gap: 12px; }
 
             .etf-locked-badge {
-                display: inline-flex; align-items: center; gap: 8px; background: rgba(0,242,255,0.1);
-                padding: 6px 12px; border-radius: 100px; font-size: 0.6rem; font-weight: 800;
-                color: var(--primary); margin-bottom: 12px; border: 1px solid rgba(0,242,255,0.2);
+                display: inline-flex; align-items: center; gap: 8px; background: rgba(103,232,249,0.12);
+                padding: 6px 12px; border-radius: 100px; font-size: 0.6rem; font-weight: 900;
+                color: var(--primary); margin-bottom: 12px; border: 1px solid rgba(103,232,249,0.25);
                 text-transform: uppercase; letter-spacing: 1px; width: fit-content;
             }
             .etf-locked-badge span { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 8px var(--primary); }
 
-            .etf-title { font-size: 2.1rem; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -1px; }
-            .etf-subtitle { opacity: 0.4; font-size: 0.95rem; margin-top: 15px; line-height: 1.5; }
+            .etf-title { font-size: 2.1rem; font-weight: 900; margin: 0; line-height: 1.05; letter-spacing: -0.015em; }
+            .etf-subtitle { color: var(--muted-2); font-size: 0.95rem; margin-top: 15px; line-height: 1.7; font-weight: 500; letter-spacing: -0.015em; }
 
             .etf-card-row {
-                background: #181818; border-radius: 20px; padding: 18px 24px;
-                display: flex; align-items: center; cursor: pointer; transition: 0.3s;
-                border: 1px solid rgba(255,255,255,0.02); position: relative; overflow: hidden;
+                background: var(--panel); border-radius: 22px; padding: 18px 24px;
+                display: flex; align-items: center; cursor: pointer; transition: 0.25s ease;
+                border: 1px solid var(--line); position: relative; overflow: hidden;
+                box-shadow: var(--shadow);
             }
             .etf-card-content { display: flex; align-items: center; width: 100%; transition: 0.3s; }
             .etf-card-hover-text { 
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
                 display: flex; align-items: center; justify-content: center;
                 opacity: 0; transform: translateY(10px); transition: 0.3s;
-                font-weight: 800; letter-spacing: 1px; color: var(--primary); text-transform: uppercase; font-size: 0.95rem;
+                font-weight: 900; letter-spacing: 1px; color: var(--primary); text-transform: uppercase; font-size: 0.95rem;
             }
-            .etf-card-row:hover { background: #222; transform: translateX(5px); border-color: var(--primary); box-shadow: 0 0 20px rgba(0,242,255,0.1); }
+            .etf-card-row:hover { transform: translateY(-3px); border-color: rgba(103,232,249,0.18); box-shadow: 0 22px 54px rgba(0,0,0,0.48); }
             .etf-card-row:hover .etf-card-content { opacity: 0; transform: scale(0.97); }
             .etf-card-row:hover .etf-card-hover-text { opacity: 1; transform: translateY(0); }
 
-            .etf-card-icon { width: 44px; height: 44px; background: rgba(255,255,255,0.03); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-right: 18px; }
+            .etf-card-icon { width: 44px; height: 44px; background: rgba(255,255,255,0.04); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-right: 18px; border: 1px solid var(--line); }
             .etf-card-info { flex: 1; text-align: left; }
-            .etf-card-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 1px; margin-bottom: 2px; }
-            .etf-card-name { font-size: 1.05rem; font-weight: 700; }
+            .etf-card-label { font-size: 0.6rem; font-weight: 900; letter-spacing: 1px; margin-bottom: 2px; }
+            .etf-card-name { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.03em; }
 
             .etf-visualizer { 
-                width: 100%; height: 260px; background: #000; border-radius: 24px; 
+                width: 100%; height: 260px; background: rgba(7,9,15,0.8); border-radius: 22px; 
                 display: flex; align-items: center; justify-content: center; 
-                border: 1px solid rgba(0,242,255,0.15); box-shadow: inset 0 0 20px rgba(0,242,255,0.05);
+                border: 1px solid rgba(103,232,249,0.15); box-shadow: inset 0 0 20px rgba(103,232,249,0.05);
                 position: relative; overflow: hidden;
             }
             .visualizer-svg { width: 100%; height: 100%; max-width: 180px; max-height: 180px; }
@@ -182,28 +195,46 @@
 
             .etf-footer { 
                 position: fixed; bottom: 0; left: 0; width: 100%; height: 90px; 
-                background: rgba(255,255,255,0.03); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-                border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; 
+                background: var(--panel); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+                border-top: 1px solid var(--line); display: flex; justify-content: space-around; 
                 align-items: center; z-index: 2147483647; 
             }
             .etf-tab { 
                 display: flex; flex-direction: column; align-items: center; gap: 8px; 
-                opacity: 0.3; font-weight: 800; font-size: 0.7rem; cursor: pointer; 
-                transition: 0.3s; position: relative; width: 100px; 
+                opacity: 0.35; font-weight: 800; font-size: 0.7rem; cursor: pointer; 
+                transition: 0.3s; position: relative; width: 100px; letter-spacing: 0.5px;
             }
             .etf-tab-icon { font-size: 1.4rem; }
             .etf-tab.active { opacity: 1; color: var(--primary); }
-            .etf-tab.active::before { content: ''; position: absolute; top: -10px; width: 40px; height: 3px; background: var(--primary); border-radius: 0 0 5px 5px; box-shadow: 0 0 15px var(--primary); }
+            .etf-tab.active::before { content: ''; position: absolute; top: -10px; width: 40px; height: 3px; background: var(--secondary); border-radius: 0 0 5px 5px; box-shadow: 0 0 15px rgba(124,58,237,0.6); }
+            .etf-tab:hover { opacity: 0.7; }
 
             .etf-section { text-align: left; margin-bottom: 2rem; width: 100%; }
-            .etf-label { font-size: 0.7rem; font-weight: 800; letter-spacing: 1.5px; opacity: 0.6; margin-bottom: 10px; display: block; text-transform: uppercase; }
-            .etf-slider { width: 100%; accent-color: var(--primary); height: 8px; border-radius: 10px; margin: 10px 0; }
+            .etf-label { font-size: 0.7rem; font-weight: 900; letter-spacing: 1.5px; color: #c4b5fd; margin-bottom: 10px; display: block; text-transform: uppercase; }
+            .etf-slider { width: 100%; accent-color: var(--secondary); height: 8px; border-radius: 10px; margin: 10px 0; background: rgba(255,255,255,0.06); }
             .etf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-            .etf-checkbox { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; cursor: pointer; font-size: 0.85rem; font-weight: 700; border: 1px solid transparent; }
-            .etf-checkbox:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.1); }
+            .etf-checkbox { 
+                display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); 
+                padding: 14px; border-radius: 14px; cursor: pointer; font-size: 0.85rem; font-weight: 700; 
+                border: 1px solid var(--line); transition: 0.2s ease; letter-spacing: -0.02em;
+            }
+            .etf-checkbox:hover { background: rgba(255,255,255,0.08); border-color: rgba(103,232,249,0.18); transform: translateY(-1px); }
+            .etf-checkbox input[type="checkbox"] { accent-color: var(--secondary); }
 
-            .etf-input { width: 100%; background: #000; border: 1px solid rgba(255,255,255,0.1); padding: 1.1rem; border-radius: 18px; color: white; margin-bottom: 1.2rem; outline: none; font-size: 1.1rem; }
-            .etf-submit { width: 100%; background: var(--primary); border: none; padding: 1.2rem; border-radius: 18px; font-weight: 800; cursor: pointer; color: black; font-size: 1rem; }
+            .etf-input { 
+                width: 100%; background: rgba(7,9,15,0.8); border: 1px solid var(--line); 
+                padding: 1.1rem; border-radius: 18px; color: var(--text); margin-bottom: 1.2rem; outline: none; 
+                font-size: 1.1rem; font-family: var(--font); transition: border-color 0.2s ease;
+            }
+            .etf-input:focus { border-color: rgba(124,58,237,0.5); box-shadow: 0 0 20px rgba(124,58,237,0.1); }
+            .etf-submit { 
+                width: 100%; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none; 
+                padding: 1.2rem; border-radius: 18px; font-weight: 900; cursor: pointer; color: white; font-size: 1rem; 
+                font-family: var(--font); letter-spacing: -0.02em;
+                box-shadow: 0 12px 30px rgba(124,58,237,0.35); transition: transform 0.18s ease, opacity 0.18s ease;
+            }
+            .etf-submit:hover { transform: translateY(-2px); opacity: 0.96; }
+            .etf-submit:active { transform: translateY(0); }
             
             /* CHALLENGE SCREEN ADAPTIVE CENTERING */
             .etf-challenge-container { display: flex; width: 100%; gap: 40px; align-items: flex-start; }
@@ -317,9 +348,12 @@
     };
 
     const renderDashboard = () => {
+      const dashboardUrl = chrome.runtime.getURL('dashboard/index.html');
       overlay.innerHTML = `
                 <div class="etf-header"><div class="etf-logo">EARN THE FEED</div></div>
-                <div class="etf-main"><div class="etf-dashboard-card" style="display:block;"><h1 class="etf-title">DASHBOARD</h1><p class="etf-subtitle">Protocol metrics and streaks coming soon.</p></div></div>
+                <div style="flex:1; width:100%; overflow:hidden;">
+                    <iframe src="${dashboardUrl}" style="width:100%; height:calc(100vh - 160px); border:none; background:transparent;" allowtransparency="true"></iframe>
+                </div>
                 <div class="etf-footer">
                     <div class="etf-tab" id="tab-quests"><span class="etf-tab-icon">⚔️</span>QUESTS</div>
                     <div class="etf-tab active" id="tab-dashboard"><span class="etf-tab-icon">📊</span>DASHBOARD</div>
