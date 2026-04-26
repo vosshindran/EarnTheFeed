@@ -60,12 +60,52 @@ app.get('/get-challenge', async (req, res) => {
     res.json(challenge);
   } catch (err) {
     console.error('Gemini Error:', err);
-    // Fallback challenge
-    const fallback = {
-      question: 'Fix the missing parenthesis.',
-      code: "console.log('Hello'",
-      answer: "console.log('Hello')",
-    };
+    // Type-specific fallback challenges
+    let fallback;
+    if (type === 'puzzle') {
+      const puzzleFallbacks = [
+        {
+          question: 'Find the winning move for X (0-8 index).\n\n  X | O | X\n  ---------\n  O | X | O\n  ---------\n  _ | _ | _',
+          code: 'Board positions:\n0 | 1 | 2\n---------\n3 | 4 | 5\n---------\n6 | 7 | 8',
+          answer: '8'
+        },
+        {
+          question: 'Find the winning move for X (0-8 index).\n\n  X | _ | O\n  ---------\n  _ | X | _\n  ---------\n  O | _ | _',
+          code: 'Board positions:\n0 | 1 | 2\n---------\n3 | 4 | 5\n---------\n6 | 7 | 8',
+          answer: '8'
+        },
+        {
+          question: 'Find the winning move for X (0-8 index).\n\n  X | X | _\n  ---------\n  O | O | _\n  ---------\n  _ | _ | _',
+          code: 'Board positions:\n0 | 1 | 2\n---------\n3 | 4 | 5\n---------\n6 | 7 | 8',
+          answer: '2'
+        },
+        {
+          question: 'Find the winning move for X (0-8 index).\n\n  O | _ | X\n  ---------\n  _ | O | _\n  ---------\n  X | _ | _',
+          code: 'Board positions:\n0 | 1 | 2\n---------\n3 | 4 | 5\n---------\n6 | 7 | 8',
+          answer: '8'
+        }
+      ];
+      fallback = puzzleFallbacks[Math.floor(Math.random() * puzzleFallbacks.length)];
+    } else {
+      const codingFallbacks = [
+        {
+          question: 'Fix the missing parenthesis.',
+          code: "console.log('Hello'",
+          answer: "console.log('Hello')"
+        },
+        {
+          question: 'What does this return?',
+          code: "typeof null",
+          answer: "object"
+        },
+        {
+          question: 'Fix the typo in this array method.',
+          code: "[1,2,3].lenght",
+          answer: "[1,2,3].length"
+        }
+      ];
+      fallback = codingFallbacks[Math.floor(Math.random() * codingFallbacks.length)];
+    }
     currentAnswer = fallback.answer;
     res.json(fallback);
   }
